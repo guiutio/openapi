@@ -382,6 +382,48 @@ class TestOpenApi2HttpDomain(object):
                   error
         ''').lstrip()
 
+    def test_method_option(self):
+        spec = collections.defaultdict(collections.OrderedDict)
+        spec['paths']['/resource_a'] = {
+            'get': {
+                'description': 'resource a',
+                'responses': {
+                    '200': {'description': 'ok'},
+                }
+            },
+            'post': {
+                'description': 'resource a',
+                'responses': {
+                    '201': {'description': 'ok'},
+                }
+            },
+            'put': {
+                'description': 'resource a',
+                'responses': {
+                    '404': {'description': 'error'},
+                }
+            }
+        }
+
+        renderer = renderers.HttpdomainOldRenderer(
+            None,
+            {
+                'methods': ['post'],
+                'paths': ['/resource_a'],
+            },
+        )
+        text = '\n'.join(renderer.render_restructuredtext_markup(spec))
+
+        assert text == textwrap.dedent('''
+            .. http:post:: /resource_a
+               :synopsis: null
+
+               resource a
+
+               :status 201:
+                  ok
+        ''').lstrip()
+
     def test_root_parameters(self):
         spec = {'paths': {}}
         spec['paths']['/resources/{name}'] = collections.OrderedDict()
@@ -1487,6 +1529,48 @@ class TestOpenApi3HttpDomain(object):
 
         ''').lstrip()
 
+    def test_method_option(self):
+        spec = collections.defaultdict(collections.OrderedDict)
+        spec['paths']['/resource_a'] = {
+            'get': {
+                'description': 'resource a',
+                'responses': {
+                    '200': {'description': 'ok'},
+                }
+            },
+            'post': {
+                'description': 'resource a',
+                'responses': {
+                    '201': {'description': 'ok'},
+                }
+            },
+            'put': {
+                'description': 'resource a',
+                'responses': {
+                    '404': {'description': 'error'},
+                }
+            }
+        }
+
+        renderer = renderers.HttpdomainOldRenderer(
+            None,
+            {
+                'methods': ['post'],
+                'paths': ['/resource_a'],
+            },
+        )
+        text = '\n'.join(renderer.render_restructuredtext_markup(spec))
+
+        assert text == textwrap.dedent('''
+            .. http:post:: /resource_a
+               :synopsis: null
+
+               resource a
+
+               :status 201:
+                  ok
+        ''').lstrip()
+
 
 class TestResolveRefs(object):
 
@@ -1710,7 +1794,11 @@ class TestConvertJsonSchema(object):
                             'description': 'The car of user'
                         }
                     }
-                }
+                },
+                'meta': {
+                    'type': 'object',
+                    'description': 'free form metadata',
+                },
             }
         }
 
@@ -1722,6 +1810,7 @@ class TestConvertJsonSchema(object):
             :<json integer friends[].age:
             :<json string friends[].name: (read only)
             :<json integer id: the id of user (read only)
+            :<json object meta: free form metadata
             :<json string name: The name of user (required)'''.strip('\n'))
 
         assert result == expected
